@@ -122,7 +122,3 @@ void CokoinoArm::do_action(int *angle,int speed)
   }while(count<180);
   delay(speed*20);
 }
-
-
-
-
