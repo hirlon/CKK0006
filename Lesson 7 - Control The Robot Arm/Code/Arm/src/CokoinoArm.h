@@ -31,7 +31,7 @@ class CokoinoArm
      CokoinoServo servo2;
      CokoinoServo servo3;
      CokoinoServo servo4;
-     COkoinoServo servo5;
+     CokoinoServo servo5;
      CokoinoJoyStick JoyStickL;
      CokoinoJoyStick JoyStickR; 	 
 };
