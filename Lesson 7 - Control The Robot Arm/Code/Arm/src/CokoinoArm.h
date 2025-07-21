@@ -16,7 +16,7 @@ class CokoinoArm
  public:
      CokoinoArm();
 	 void JoyStickAttach(uint8_t xpin1,uint8_t ypin1,uint8_t xpin2,uint8_t ypin2);
-     void ServoAttach(uint8_t servo1_pin,uint8_t servo2_pin,uint8_t servo3_pin,uint8_t servo4_pin);
+     void ServoAttach(uint8_t servo1_pin,uint8_t servo2_pin,uint8_t servo3_pin,uint8_t servo4_pin,uint8_t servo5);
      void up(int speed);
      void down(int speed);
      void left(int speed);
@@ -26,11 +26,12 @@ class CokoinoArm
 	 int *captureAction(void);
 	 void do_action(int *angle,int speed);
  //private:
-     int angle[4];
+     int angle[5];
      CokoinoServo servo1;
      CokoinoServo servo2;
      CokoinoServo servo3;
-     CokoinoServo servo4; 
+     CokoinoServo servo4;
+     COkoinoServo servo5;
      CokoinoJoyStick JoyStickL;
      CokoinoJoyStick JoyStickR; 	 
 };
