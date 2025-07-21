@@ -44,15 +44,16 @@
  * arm.JoyStickR.read_y();
  */
 #include "src/CokoinoArm.h"
+#include <SoftwareSerial.h>
 #define buzzerPin 9
 
+int state=0;
 CokoinoArm arm;
 int xL,yL,xR,yR;
-
-const int act_max=170;    //Default 10 action,4 the Angle of servo
-int act[act_max][4];    //Only can change the number of action
+SoftwareSerial BTSerial(3,2);
+const int act_max=10;    
+int act[act_max][4];   
 int num=0,num_do=0;
-///////////////////////////////////////////////////////////////
 void turnUD(void){
   if(xL!=512){
     if(0<=xL && xL<=100){arm.up(10);return;}
@@ -67,7 +68,6 @@ void turnUD(void){
     if(540<xL && xL<=600){arm.down(35);return;} 
     }
 }
-///////////////////////////////////////////////////////////////
 void turnLR(void){
   if(yL!=512){
     if(0<=yL && yL<=100){arm.right(0);return;}
@@ -82,9 +82,8 @@ void turnLR(void){
     if(540<yL && yL<=600){arm.left(20);return;}
   }
 }
-///////////////////////////////////////////////////////////////
 void turnCO(void){
-  if(xR!=512){
+  if(arm.servo4.read()>7){
     if(0<=xR && xR<=100){arm.close(0);return;}
     if(900<xR && xR<=1024){arm.open(0);return;} 
     if(100<xR && xR<=200){arm.close(5);return;}
@@ -96,32 +95,32 @@ void turnCO(void){
     if(400<xR && xR<=480){arm.close(20);return;}
     if(540<xR && xR<=600){arm.open(20);return;} 
     }
+  else{arm.servo4.write(8);
+  }  
 }
-///////////////////////////////////////////////////////////////
+
 void date_processing(int *x,int *y){
   if(abs(512-*x)>abs(512-*y))
     {*y = 512;}
   else
     {*x = 512;}
 }
-///////////////////////////////////////////////////////////////
+
 void buzzer(int H,int L){
   while(yR<420){
-    digitalWrite(buzzerPin,HIGH);
+    digitalWrite(buzzerPin,LOW);
     delayMicroseconds(H);
     digitalWrite(buzzerPin,LOW);
     delayMicroseconds(L);
-    yR = arm.JoyStickR.read_y();
     }
   while(yR>600){
-    digitalWrite(buzzerPin,HIGH);
+    digitalWrite(buzzerPin,LOW);
     delayMicroseconds(H);
     digitalWrite(buzzerPin,LOW);
     delayMicroseconds(L);
-    yR = arm.JoyStickR.read_y();
     }
 }
-///////////////////////////////////////////////////////////////
+
 void C_action(void){
   if(yR>800){
     int *p;
@@ -131,53 +130,56 @@ void C_action(void){
     p=p+1;     
     }
     num++;
-    num_do=num;
-    if(num>=act_max){
-      num=0;
-      buzzer(600,400);
-      }
-    while(yR>600){yR = arm.JoyStickR.read_y();}
-    //Serial.println(act[0][0]);
   }
-}
-///////////////////////////////////////////////////////////////
-void Do_action(void){
-  if(yR<220){
-    buzzer(200,300);
-    for(int i=0;i<num_do;i++){
-      arm.do_action(act[i],15);
-      }
-    num=0;
-    while(yR<420){yR = arm.JoyStickR.read_y();}
-    for(int i=0;i<2000;i++){
-      digitalWrite(buzzerPin,HIGH);
-      delayMicroseconds(200);
-      digitalWrite(buzzerPin,LOW);
-      delayMicroseconds(300);        
-    }
-  }
-}
-///////////////////////////////////////////////////////////////
-void setup() {
-  //Serial.begin(9600);
-  //arm of servo motor connection pins
-  arm.ServoAttach(4,5,6,7);
-  //arm of joy stick connection pins : xL,yL,xR,yR
-  arm.JoyStickAttach(A0,A1,A2,A3);
-  pinMode(buzzerPin,OUTPUT);
-}
-///////////////////////////////////////////////////////////////
-void loop() {
-  xL = arm.JoyStickL.read_x();
-  yL = arm.JoyStickL.read_y();
-  xR = arm.JoyStickR.read_x();
-  yR = arm.JoyStickR.read_y();
-  date_processing(&xL,&yL);
-  date_processing(&xR,&yR);
-  turnUD();
-  turnLR();
-  turnCO();
-  C_action();
-  Do_action();
 }
 
+void setup() {
+  Serial.begin(9600);  //Initializes serial connection
+  BTSerial.begin(9600);    // Initializes bluetooth communication
+  // arm of servo motor connection pins
+  arm.ServoAttach(4,5,6,7,10);
+  // arm of joy stick connection pins : xL,yL,xR,yR
+  arm.JoyStickAttach(A0,A1,A2,A3);
+  pinMode(buzzerPin,OUTPUT);  // Sets buzzer as an output
+  // Sets all servo at 90 degrees
+  arm.servo1.write(90);
+  arm.servo2.write(90);
+  arm.servo3.write(90);
+  arm.servo4.write(90);
+  arm.servo5.write(90);
+}
+
+void loop() {
+  if(BTSerial.available()>0){    // Allows devices to communicate wirelessly
+    state=BTSerial.read();    // This variable is used to determine which command had been received and what action the arm should perform.
+  }
+  if(state==1){
+    arm.down(20);
+  }
+  if(state==3){
+    arm.up(20);
+  }
+  if(state==5){
+    arm.left(20);
+  }
+  if(state==7){
+    arm.right(20);
+  }
+  if(state==9){
+    arm.open(20);
+  }
+  if(state==11){
+    arm.close(20);
+  }
+  if(state==13){
+    arm.servo1.write(90);
+    arm.servo2.write(90);
+    arm.servo3.write(90);
+    arm.servo4.write(90);
+    arm.servo5.write(90);
+  }
+  if(arm.servo4.read()<7){
+    arm.servo4.write(8);
+  }
+  Serial.println(state);
+}
